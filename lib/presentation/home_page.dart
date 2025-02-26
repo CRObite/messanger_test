@@ -1,12 +1,10 @@
-import 'package:flutter/cupertino.dart';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:messanger_test/config/app_colors.dart';
 import 'package:messanger_test/config/app_styles.dart';
 
 import '../widgets/common_text_field.dart';
-import '../widgets/svg_icon.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
