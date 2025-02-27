@@ -24,13 +24,14 @@ class MessageAdapter extends TypeAdapter<Message> {
       fields[4] as Uint8List?,
       fields[5] as DateTime,
       fields[6] as bool,
+      fields[7] as MediaFile?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Message obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.messageUUID)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class MessageAdapter extends TypeAdapter<Message> {
       ..writeByte(5)
       ..write(obj.timestamp)
       ..writeByte(6)
-      ..write(obj.read);
+      ..write(obj.read)
+      ..writeByte(7)
+      ..write(obj.file);
   }
 
   @override

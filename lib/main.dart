@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/adapters.dart';
+import 'package:messanger_test/domain/media_file.dart';
 
 import 'config/app_navigation.dart';
 import 'config/initial_data.dart';
@@ -12,6 +13,7 @@ void main() async {
 
   Hive.registerAdapter(UserAdapter());
   Hive.registerAdapter(MessageAdapter());
+  Hive.registerAdapter(MediaFileAdapter());
   Hive.registerAdapter(ColorAdapter());
 
   await Hive.openBox<User>('users');

@@ -1,6 +1,3 @@
-
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -137,7 +134,9 @@ class _MessagePageState extends State<MessagePage> {
           return Padding(
             padding: EdgeInsets.only(bottom: keyboardHeight),
             child: Container(
-              height: messagePageCubit.selectedImage != null ? 150 : 80,
+              height: messagePageCubit.fileImagePanelOpened
+                  || messagePageCubit.selectedImage != null
+                  || messagePageCubit.selectedFile != null? 150 : 80,
               decoration: BoxDecoration(
                   border: Border(
                       top: BorderSide(width: 1,color:  AppColors.borderGrey)
@@ -189,17 +188,139 @@ class _MessagePageState extends State<MessagePage> {
                         ),
                       ),
 
-                      SizedBox(height: 6,)
+                      Divider(
+                          color: AppColors.fieldGrey
+                      )
                   ],
+
+                  if(messagePageCubit.selectedFile != null)
+                    ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20),
+                        child: GestureDetector(
+                          onTap: (){
+                            messagePageCubit.removeFile(
+                                widget.currentUser.uuid,
+                                widget.targetUser.uuid
+                            );
+                          },
+                          child: SizedBox(
+                              width: 150,
+                              height: 60,
+                              child: Stack(
+                                children: [
+                                  SizedBox(
+                                      width: 150,
+                                      height: 60,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: AppColors.otherMessageGrey,
+                                          borderRadius: BorderRadius.circular(23)
+                                        ),
+                                        padding: EdgeInsets.all(8),
+                                        child: Center(
+                                          child: Text(
+                                            messagePageCubit.selectedFile?.fileName ?? '',
+                                            style:AppStyles.messageSubTitleText,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      )
+                                  ),
+
+                                  Center(
+                                    child: Container(
+                                      width: 30,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: AppColors.borderGrey..withValues(alpha: 0.5),
+                                      ),
+                                      child: Center(
+                                        child: Icon(Icons.close),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                          ),
+                        ),
+                      ),
+
+                      Divider(
+                          color: AppColors.fieldGrey
+                      )
+                    ],
+
+
+                  if(messagePageCubit.fileImagePanelOpened)
+                  ...[
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: (){
+                            messagePageCubit.setSelectedImage(
+                                widget.currentUser.uuid,
+                                widget.targetUser.uuid
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.fieldGrey,
+                            ),
+                            padding: EdgeInsets.all(8),
+                            child: Center(
+                              child: SvgIcon(assetName: 'assets/icons/image.svg'),
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(width: 8,),
+
+                        GestureDetector(
+                          onTap: (){
+                            messagePageCubit.setFile(
+                                widget.currentUser.uuid,
+                                widget.targetUser.uuid
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.fieldGrey,
+                            ),
+                            padding: EdgeInsets.all(8),
+                            child: Center(
+                              child: SvgIcon(assetName: 'assets/icons/file.svg'),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                    Divider(
+                        color: AppColors.fieldGrey
+                    )
+                  ],
+
+
 
                   Row(
                     children: [
                       GestureDetector(
                         onTap: (){
-                          messagePageCubit.setSelectedImage(
+                          if(messagePageCubit.fileImagePanelOpened){
+                            messagePageCubit.closePanel(
                               widget.currentUser.uuid,
                               widget.targetUser.uuid
-                          );
+                            );
+                          }else{
+                            messagePageCubit.openPanel(
+                                widget.currentUser.uuid,
+                                widget.targetUser.uuid
+                            );
+                          }
                         },
                         child: Container(
                           width: 42,
@@ -209,7 +330,9 @@ class _MessagePageState extends State<MessagePage> {
                               color: AppColors.fieldGrey
                           ),
                           padding: EdgeInsets.all(8),
-                          child: SvgIcon(assetName: 'assets/icons/upload.svg'),
+                          child: messagePageCubit.fileImagePanelOpened
+                              ? Icon(Icons.keyboard_arrow_down)
+                              : SvgIcon(assetName: 'assets/icons/upload.svg'),
                         ),
                       ),
                       SizedBox(width: 8,),
@@ -222,13 +345,19 @@ class _MessagePageState extends State<MessagePage> {
                       SizedBox(width: 8,),
                       GestureDetector(
                         onTap: (){
-                          if(_messageController.text.isNotEmpty || messagePageCubit.selectedImage != null){
+                          if(_messageController.text.isNotEmpty
+                              || messagePageCubit.selectedImage != null
+                              || messagePageCubit.selectedFile != null){
                             messagePageCubit.sendMessage(
                             widget.currentUser.uuid,
                             widget.targetUser.uuid,
                             _messageController.text
                             );
                             messagePageCubit.removeSelectedImage(
+                              widget.currentUser.uuid,
+                              widget.targetUser.uuid,
+                            );
+                            messagePageCubit.removeFile(
                               widget.currentUser.uuid,
                               widget.targetUser.uuid,
                             );
@@ -380,9 +509,54 @@ class MessagePageBody extends StatelessWidget {
                   SizedBox(height: 8,)
                 ],
 
+                if(message.file != null)
+                  ...[
+                    GestureDetector(
+                      onTap: (){
+                        messagePageCubit.saveFile(
+                          message.file!.fileData!,
+                          message.file!.fileName,
+                        );
+                      },
+                      child: Row(
+                        children: [
+
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.fieldGrey,
+                              shape: BoxShape.circle
+                            ),
+                            padding: EdgeInsets.all(8),
+                            child: Icon(
+                              Icons.download_rounded,
+                              size: 24,
+                              color: isCurrentUser
+                                ? AppColors.myMessageTextGrey
+                                : AppColors.otherMessageTextGrey
+                            ),
+                          ),
+
+                          SizedBox(width: 12,),
+
+                          Flexible(
+                            child: Text(
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              message.file?.fileName ?? '',
+                              style: isCurrentUser
+                                ?AppStyles.messageDateText.copyWith(color:AppColors.myMessageTextGrey)
+                                :AppStyles.messageDateText.copyWith(color:AppColors.otherMessageTextGrey),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 8,)
+                  ],
+
 
                 Row(
-                  mainAxisSize: message.image == null
+                  mainAxisSize: message.image == null && message.file == null
                       ? MainAxisSize.min
                       : MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.end,

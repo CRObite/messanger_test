@@ -35,6 +35,9 @@ class InitialData {
     var messageBox = Hive.box<Message>('messages');
     var uuid = Uuid();
 
+    Uint8List avatar1 = (await rootBundle.load('assets/images/avatar1.jpg')).buffer.asUint8List();
+    Uint8List avatar2 = (await rootBundle.load('assets/images/avatar2.jpg')).buffer.asUint8List();
+
     if (userBox.isNotEmpty && messageBox.isEmpty) {
       List<User> users = userBox.values.toList();
 
@@ -45,10 +48,10 @@ class InitialData {
           User sender = users[i];
 
           List<Message> messages = [
-            Message(uuid.v4(), sender.uuid, currentUser.uuid, "Привет, ${currentUser.name}!", null, DateTime.now().subtract(Duration(days: 1)),false),
-            Message(uuid.v4(), sender.uuid, currentUser.uuid, "Как дела?", null, DateTime.now().subtract(Duration(days: 1,minutes: 15)),false),
-            Message(uuid.v4(), currentUser.uuid, sender.uuid, "Привет, ${sender.name}!", null, DateTime.now().subtract(Duration(minutes: 2)),true),
-            Message(uuid.v4(), currentUser.uuid, sender.uuid, "Как сам?", null, DateTime.now(),false),
+            Message(uuid.v4(), sender.uuid, currentUser.uuid, "Привет, ${currentUser.name}!", avatar1, DateTime.now().subtract(Duration(days: 1)),false,null),
+            Message(uuid.v4(), sender.uuid, currentUser.uuid, "Как дела?", null, DateTime.now().subtract(Duration(days: 1,minutes: 15)),false,null),
+            Message(uuid.v4(), currentUser.uuid, sender.uuid, "Привет, ${sender.name}!", avatar2, DateTime.now().subtract(Duration(minutes: 2)),true,null),
+            Message(uuid.v4(), currentUser.uuid, sender.uuid, "Как сам?", null, DateTime.now(),false,null),
           ];
 
           for (var message in messages) {
