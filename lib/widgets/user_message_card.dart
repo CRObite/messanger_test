@@ -86,7 +86,7 @@ class UserMessageCard extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerRight,
               child: Text(
-                TimeagoFormatter.getTimeagoFormat(userMessage.lastMessage!.timestamp),
+                TimeagoFormatter.getTimeagoFormat(userMessage.user.lastSeenOnline),
                 style: AppStyles.messageSubTitleText,
               )
             )

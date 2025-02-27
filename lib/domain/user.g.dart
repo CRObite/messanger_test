@@ -22,13 +22,14 @@ class UserAdapter extends TypeAdapter<User> {
       fields[2] as String,
       fields[3] as Uint8List?,
       fields[4] as Color,
+      fields[5] as DateTime,
     );
   }
 
   @override
   void write(BinaryWriter writer, User obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.uuid)
       ..writeByte(1)
@@ -38,7 +39,9 @@ class UserAdapter extends TypeAdapter<User> {
       ..writeByte(3)
       ..write(obj.avatar)
       ..writeByte(4)
-      ..write(obj.noAvatarColor);
+      ..write(obj.noAvatarColor)
+      ..writeByte(5)
+      ..write(obj.lastSeenOnline);
   }
 
   @override

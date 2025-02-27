@@ -107,16 +107,31 @@ class HomePageBody extends StatelessWidget {
               return ListView.builder(
                 itemCount: state.userAndMessages.length,
                 itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                      context.pushNamed('message',extra: {
-                        'currentUser': state.currentUser,
-                        'targetUser': state.userAndMessages[index].user,
-                      });
+                  return Dismissible(
+                    key: Key(state.userAndMessages[index].user.uuid),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      color: Colors.red,
+                      child: Icon(Icons.delete, color: Colors.white),
+                    ),
+                    onDismissed: (_) {
+                      homePageCubit.deleteChat(state.userAndMessages[index].user.uuid);
                     },
-                    child: UserMessageCard(
-                      userMessage: state.userAndMessages[index],
-                      sender: state.currentUser.uuid == state.userAndMessages[index].lastMessage?.senderUUID,
+                    child: GestureDetector(
+                      onTap: () async {
+                        await context.pushNamed('message',extra: {
+                          'currentUser': state.currentUser,
+                          'targetUser': state.userAndMessages[index].user,
+                        });
+
+                        homePageCubit.loadUserMessages();
+                      },
+                      child: UserMessageCard(
+                        userMessage: state.userAndMessages[index],
+                        sender: state.currentUser.uuid == state.userAndMessages[index].lastMessage?.senderUUID,
+                      ),
                     ),
                   );
                 },

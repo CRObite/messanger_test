@@ -14,12 +14,11 @@ class CommonTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
-
+      style: TextStyle(decoration: TextDecoration.none,decorationThickness: 0),
       controller: controller,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: AppStyles.fieldHintText,
-
         fillColor: AppColors.fieldGrey,
         filled: true,
 
@@ -27,11 +26,12 @@ class CommonTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
+
         contentPadding: EdgeInsets.only(
           left: 8,
-          bottom: 42 / 2,  // HERE THE IMPORTANT PART
-        ),
+          right: 8,
 
+        ),
         prefixIcon: prefixIcon.isNotEmpty?  Padding(
           padding: const EdgeInsets.all(8.0),
           child: SvgIcon(

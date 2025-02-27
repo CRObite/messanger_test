@@ -27,8 +27,8 @@ class MessagePage extends StatefulWidget {
 class _MessagePageState extends State<MessagePage> {
 
   MessagePageCubit messagePageCubit = MessagePageCubit();
-  bool messageStarted = false;
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _historyScrollController = ScrollController();
 
   @override
   void initState() {
@@ -36,18 +36,6 @@ class _MessagePageState extends State<MessagePage> {
         widget.currentUser.uuid,
         widget.targetUser.uuid
     );
-
-    _messageController.addListener(() {
-      if(_messageController.text.isNotEmpty){
-        setState(() {
-          messageStarted = true;
-        });
-      }else{
-        setState(() {
-          messageStarted = false;
-        });
-      }
-    });
     super.initState();
   }
 
@@ -130,66 +118,131 @@ class _MessagePageState extends State<MessagePage> {
           messagePageCubit: messagePageCubit,
           currentUser: widget.currentUser,
           targetUser: widget.targetUser,
+          scrollController: _historyScrollController,
         ),
       ),
-      bottomNavigationBar: Builder(
-        builder: (context){
-
+      bottomNavigationBar: BlocBuilder(
+        bloc: messagePageCubit,
+        builder: (context,state){
           double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
           return Padding(
             padding: EdgeInsets.only(bottom: keyboardHeight),
             child: Container(
-              height: 100,
+              height: messagePageCubit.selectedImage != null ? 150 : 100,
               decoration: BoxDecoration(
                   border: Border(
                       top: BorderSide(width: 1,color:  AppColors.borderGrey)
                   )
               ),
               padding: EdgeInsets.symmetric(horizontal: 20,vertical: 14),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: AppColors.fieldGrey
-                    ),
-                    padding: EdgeInsets.all(8),
-                    child: SvgIcon(assetName: 'assets/icons/upload.svg'),
-                  ),
-                  SizedBox(width: 8,),
-                  Expanded(
-                    child: SizedBox(
-                      height: 42,
-                      child: CommonTextField(hint: 'Сообщение', controller: _messageController),
-                    ),
-                  ),
-                  SizedBox(width: 8,),
-                  GestureDetector(
-                    onTap: (){
-                      if(messageStarted){
-                        messagePageCubit.sendMessage(
-                        widget.currentUser.uuid,
-                        widget.targetUser.uuid,
-                        _messageController.text
-                        );
-                        _messageController.clear();
-                      }
-                    },
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: AppColors.fieldGrey
+
+                  if(messagePageCubit.selectedImage != null)
+                    ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20),
+                        child: GestureDetector(
+                          onTap: (){
+                            messagePageCubit.removeSelectedImage(
+                              widget.currentUser.uuid,
+                              widget.targetUser.uuid
+                            );
+                          },
+                          child: SizedBox(
+                            width: 60,
+                            height: 60,
+                            child: Stack(
+                              children: [
+                                SizedBox(
+                                  width: 60,
+                                  height: 60,
+                                  child: Image.memory(messagePageCubit.selectedImage!,fit: BoxFit.cover)
+                                ),
+
+                                Center(
+                                  child: Container(
+                                    width: 30,
+                                    height: 30,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.borderGrey..withValues(alpha: 0.5),
+                                    ),
+                                    child: Center(
+                                      child: Icon(Icons.close),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          ),
+                        ),
                       ),
-                      padding: EdgeInsets.all(8),
-                      child: SvgIcon(assetName: messageStarted
-                          ?'assets/icons/send.svg'
-                          :'assets/icons/voice.svg'
+
+                      SizedBox(height: 6,)
+                  ],
+
+
+
+
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: (){
+                          messagePageCubit.setSelectedImage(
+                              widget.currentUser.uuid,
+                              widget.targetUser.uuid
+                          );
+                        },
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: AppColors.fieldGrey
+                          ),
+                          padding: EdgeInsets.all(8),
+                          child: SvgIcon(assetName: 'assets/icons/upload.svg'),
+                        ),
                       ),
-                    ),
+                      SizedBox(width: 8,),
+                      Expanded(
+                        child: SizedBox(
+                          height: 42,
+                          child: CommonTextField(hint: 'Сообщение', controller: _messageController),
+                        ),
+                      ),
+                      SizedBox(width: 8,),
+                      GestureDetector(
+                        onTap: (){
+                          if(_messageController.text.isNotEmpty || messagePageCubit.selectedImage != null){
+                            messagePageCubit.sendMessage(
+                            widget.currentUser.uuid,
+                            widget.targetUser.uuid,
+                            _messageController.text
+                            );
+                            messagePageCubit.removeSelectedImage(
+                              widget.currentUser.uuid,
+                              widget.targetUser.uuid,
+                            );
+                            _messageController.clear();
+
+                            _historyScrollController.jumpTo(_historyScrollController.position.maxScrollExtent);
+                          }
+                        },
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: AppColors.fieldGrey
+                          ),
+                          padding: EdgeInsets.all(8),
+                          child: SvgIcon(assetName: 'assets/icons/send.svg'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -203,9 +256,10 @@ class _MessagePageState extends State<MessagePage> {
 
 
 class MessagePageBody extends StatelessWidget {
-  const MessagePageBody({super.key, required this.messagePageCubit, required this.currentUser, required this.targetUser});
+  const MessagePageBody({super.key, required this.messagePageCubit, required this.currentUser, required this.targetUser, required this.scrollController});
 
   final MessagePageCubit messagePageCubit;
+  final ScrollController scrollController;
   final User currentUser;
   final User targetUser;
 
@@ -230,22 +284,26 @@ class MessagePageBody extends StatelessWidget {
                   );
                 case MessagePageFetched():
                   Map<String, List<Message>> groupedMessages = _groupMessagesByDate(state.listOfMessages);
-                  return ListView.builder(
-                    reverse: true,
-                    itemCount: groupedMessages.length,
-                    itemBuilder: (context, index) {
-                      String date = groupedMessages.keys.elementAt(index);
-                      List<Message> messagesForDate = groupedMessages[date]!;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          _buildDateHeader(date),
-                          SizedBox(height: 20,),
-                          ...messagesForDate.map((message) => _buildMessageBubble(message, currentUser)),
-                        ],
-                      );
-                    },
+                  return Align(
+                    alignment: Alignment.bottomCenter,
+                    child: ListView.builder(
+                      controller: scrollController,
+                      shrinkWrap: true,
+                      itemCount: groupedMessages.length,
+                      itemBuilder: (context, index) {
+                        String date = groupedMessages.keys.elementAt(index);
+                        List<Message> messagesForDate = groupedMessages[date]!;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            _buildDateHeader(date),
+                            SizedBox(height: 20,),
+                            ...messagesForDate.map((message) => _buildMessageBubble(message, currentUser)),
+                          ],
+                        );
+                      },
+                    ),
                   );
                 default:
                   return const SizedBox();
@@ -290,15 +348,63 @@ class MessagePageBody extends StatelessWidget {
     return Align(
       alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 6),
+        padding: EdgeInsets.only(bottom: 6,left: isCurrentUser? 57:0,right: isCurrentUser? 0:57,),
         child: CustomPaint(
           painter: MessageBoxPainter(isCurrentUser: isCurrentUser),
           child: Container(
             margin: EdgeInsets.all(4),
-            padding: EdgeInsets.only(top: 8,left: isCurrentUser?8:18,right: isCurrentUser? 18:8,bottom: 8),
-            child: Text(message.text, style:isCurrentUser
-              ?AppStyles.messageDateText.copyWith(color:AppColors.myMessageTextGrey)
-              :AppStyles.messageDateText.copyWith(color:AppColors.otherMessageTextGrey),
+            padding: EdgeInsets.only(top: 4,left: isCurrentUser?4:14,right: isCurrentUser? 14:4,bottom: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+                if(message.image != null)
+                ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(19),
+                      topRight: Radius.circular(19),
+                      bottomLeft: Radius.circular(8),
+                      bottomRight: Radius.circular(8),
+                    ),
+                    child: Image.memory(message.image!)
+                  ),
+                  SizedBox(height: 8,)
+                ],
+
+
+                Row(
+                  mainAxisSize: message.image == null
+                      ? MainAxisSize.min
+                      : MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 10),
+                        child: Text(message.text, style: isCurrentUser
+                          ?AppStyles.messageDateText.copyWith(color:AppColors.myMessageTextGrey)
+                          :AppStyles.messageDateText.copyWith(color:AppColors.otherMessageTextGrey),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12,),
+                    Row(
+                      children: [
+                        Text(DateFormat('HH:mm').format(message.timestamp),
+                          style: AppStyles.messageSubTitleText.copyWith(color: AppColors.myMessageTextGrey),),
+                        SizedBox(width: 12,),
+                        isCurrentUser
+                            ? message.read
+                            ? SvgIcon(assetName: 'assets/icons/double_check.svg',height: 12,color: AppColors.myMessageTextGrey,)
+                            : SvgIcon(assetName: 'assets/icons/check.svg',height: 12,color: AppColors.myMessageTextGrey)
+                            : SizedBox()
+                      ],
+                    )
+                  ],
+                ),
+              ],
             )
           ),
         ),

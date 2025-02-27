@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:messanger_test/domain/message.dart';
 import 'package:uuid/uuid.dart';
 
@@ -13,6 +14,7 @@ part 'message_page_state.dart';
 class MessagePageCubit extends Cubit<MessagePageState> {
   MessagePageCubit() : super(MessagePageInitial());
 
+  Uint8List? selectedImage;
 
   void loadMessages(String currentUserUUID, String targetUserUUID) {
     emit(MessagePageLoading());
@@ -30,8 +32,8 @@ class MessagePageCubit extends Cubit<MessagePageState> {
     }
   }
 
-  Future<void> sendMessage(String currentUserUUID, String targetUserUUID,String text, {Uint8List? image}) async {
-    if (text.isEmpty && image == null) return;
+  Future<void> sendMessage(String currentUserUUID, String targetUserUUID,String text) async {
+    if (text.isEmpty && selectedImage == null) return;
 
     var messageBox = Hive.box<Message>('messages');
 
@@ -41,7 +43,7 @@ class MessagePageCubit extends Cubit<MessagePageState> {
       currentUserUUID,
       targetUserUUID,
       text,
-      image,
+      selectedImage,
       DateTime.now(),
       false
     );
@@ -50,4 +52,19 @@ class MessagePageCubit extends Cubit<MessagePageState> {
     loadMessages(currentUserUUID,targetUserUUID);
   }
 
+
+  Future<void> setSelectedImage(String currentUserUUID, String targetUserUUID) async {
+    final ImagePicker picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      selectedImage = await pickedFile.readAsBytes();
+    }
+    loadMessages(currentUserUUID,targetUserUUID);
+  }
+
+  Future<void> removeSelectedImage(String currentUserUUID, String targetUserUUID) async {
+    selectedImage = null;
+    loadMessages(currentUserUUID,targetUserUUID);
+  }
 }

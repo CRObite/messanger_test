@@ -28,14 +28,19 @@ class HomePageCubit extends Cubit<HomePageState> {
       _allUsers = allUsers.skip(1).map((user) {
         var messagesBetween = messageBox.values.where((message) =>
         (message.senderUUID == _currentUser!.uuid && message.receiverUUID == user.uuid) ||
-            (message.senderUUID == user.uuid && message.receiverUUID == _currentUser!.uuid)).toList();
+            (message.senderUUID == user.uuid && message.receiverUUID == _currentUser!.uuid)
+        ).toList();
 
-        messagesBetween.sort((a, b) => b.timestamp.compareTo(a.timestamp)); //srtByTiMw
+        messagesBetween.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-        return UserMessage(user, messagesBetween.isNotEmpty ? messagesBetween.first : null);
-      }).toList();
+        return messagesBetween.isNotEmpty ? UserMessage(user, messagesBetween.first) : null;
+      }).whereType<UserMessage>().toList();
 
-      emit(HomePageFetched(userAndMessages: _allUsers, currentUser: _currentUser!));
+      if (_allUsers.isNotEmpty) {
+        emit(HomePageFetched(userAndMessages: _allUsers, currentUser: _currentUser!));
+      } else {
+        emit(HomePageError(errorText: 'Нет активных чатов'));
+      }
     } else {
       emit(HomePageError(errorText: 'Нет данных'));
     }
@@ -54,5 +59,20 @@ class HomePageCubit extends Cubit<HomePageState> {
           .toList();
       emit(HomePageFetched(userAndMessages: filteredUsers, currentUser: _currentUser!));
     }
+  }
+
+  void deleteChat(String targetUserUUID) {
+    var messageBox = Hive.box<Message>('messages');
+
+    messageBox.deleteAll(
+      messageBox.values
+          .where((message) =>
+      (message.senderUUID == _currentUser!.uuid && message.receiverUUID == targetUserUUID) ||
+          (message.senderUUID == targetUserUUID && message.receiverUUID == _currentUser!.uuid))
+          .map((msg) => msg.key)
+          .toList(),
+    );
+
+    loadUserMessages();
   }
 }

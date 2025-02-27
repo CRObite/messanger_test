@@ -20,5 +20,9 @@ class User extends HiveObject{
   @HiveField(4)
   Color noAvatarColor;
 
-  User(this.uuid, this.name, this.surname, this.avatar, this.noAvatarColor);
+  @HiveField(5)
+  DateTime lastSeenOnline;
+
+  User(this.uuid, this.name, this.surname, this.avatar, this.noAvatarColor,
+      this.lastSeenOnline);
 }
