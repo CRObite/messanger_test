@@ -43,28 +43,32 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar:  PreferredSize(
-        preferredSize: Size.fromHeight(160),
-        child: Column(
-          children: [
-            AppBar(
-              title: Text('Чаты',style: AppStyles.titleText),
-              backgroundColor: Colors.white,
-            ),
-            SizedBox(height: 6,),
-            Container(
-              height: 50,
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: CommonTextField(
-                hint: 'Поиск',
-                prefixIcon: 'assets/icons/search.svg',
-                controller: _searchController,
+        preferredSize: Size.fromHeight(140),
+        child: Container(
+          decoration: BoxDecoration(
+              border: Border(
+                  bottom: BorderSide(width: 1,color:  AppColors.borderGrey)
               )
-            ),
-            SizedBox(height: 24,),
-            Divider(
-              color: AppColors.borderGrey,
-            )
-          ],
+          ),
+          child: Column(
+            children: [
+              AppBar(
+                title: Text('Чаты',style: AppStyles.titleText),
+                backgroundColor: Colors.white,
+              ),
+              SizedBox(height: 6,),
+              Container(
+                height: 50,
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: CommonTextField(
+                  hint: 'Поиск',
+                  prefixIcon: 'assets/icons/search.svg',
+                  controller: _searchController,
+                )
+              ),
+              SizedBox(height: 24,)
+            ],
+          ),
         ),
       ),
 

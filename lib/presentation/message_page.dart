@@ -1,4 +1,6 @@
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -36,6 +38,7 @@ class _MessagePageState extends State<MessagePage> {
         widget.currentUser.uuid,
         widget.targetUser.uuid
     );
+
     super.initState();
   }
 
@@ -53,62 +56,68 @@ class _MessagePageState extends State<MessagePage> {
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(90),
         child: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: (){context.pop();},
-                      icon: SvgIcon(assetName: 'assets/icons/arrow_back.svg'),
-                    ),
-
-                    Flexible(
-                      child: Row(
-                        children: [
-                          SizedBox(
-                              height: 50,
-                              width: 50,
-                              child: CircleAvatar(
-                                foregroundImage: widget.targetUser.avatar != null
-                                    ? MemoryImage(widget.targetUser.avatar!)
-                                    : null,
-                                backgroundColor: widget.targetUser.avatar == null
-                                    ? widget.targetUser.noAvatarColor
-                                    : null,
-                                child: widget.targetUser.avatar == null
-                                    ? Text('${widget.targetUser.name[0]}${widget.targetUser.surname[0]}',style: AppStyles.userNoAvatarTextText,)
-                                    : null,
-                              )
-                          ),
-
-                          SizedBox(width: 12,),
-
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('${widget.targetUser.name} ${widget.targetUser.surname}',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppStyles.messageUserText,
-                                ),
-                                Text('Не в сети',style: AppStyles.messageSubTitleText,),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 12,),
-              Divider(
-                color: AppColors.borderGrey,
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  width: 1,color:AppColors.borderGrey
+                )
               )
-            ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: (){context.pop();},
+                        icon: SvgIcon(assetName: 'assets/icons/arrow_back.svg'),
+                      ),
+
+                      Flexible(
+                        child: Row(
+                          children: [
+                            SizedBox(
+                                height: 50,
+                                width: 50,
+                                child: CircleAvatar(
+                                  foregroundImage: widget.targetUser.avatar != null
+                                      ? MemoryImage(widget.targetUser.avatar!)
+                                      : null,
+                                  backgroundColor: widget.targetUser.avatar == null
+                                      ? widget.targetUser.noAvatarColor
+                                      : null,
+                                  child: widget.targetUser.avatar == null
+                                      ? Text('${widget.targetUser.name[0]}${widget.targetUser.surname[0]}',style: AppStyles.userNoAvatarTextText,)
+                                      : null,
+                                )
+                            ),
+
+                            SizedBox(width: 12,),
+
+                            Flexible(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('${widget.targetUser.name} ${widget.targetUser.surname}',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppStyles.messageUserText,
+                                  ),
+                                  Text('Не в сети',style: AppStyles.messageSubTitleText,),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 12,),
+              ],
+            ),
           ),
         ),
       ),
@@ -128,7 +137,7 @@ class _MessagePageState extends State<MessagePage> {
           return Padding(
             padding: EdgeInsets.only(bottom: keyboardHeight),
             child: Container(
-              height: messagePageCubit.selectedImage != null ? 150 : 100,
+              height: messagePageCubit.selectedImage != null ? 150 : 80,
               decoration: BoxDecoration(
                   border: Border(
                       top: BorderSide(width: 1,color:  AppColors.borderGrey)
@@ -183,9 +192,6 @@ class _MessagePageState extends State<MessagePage> {
                       SizedBox(height: 6,)
                   ],
 
-
-
-
                   Row(
                     children: [
                       GestureDetector(
@@ -228,7 +234,7 @@ class _MessagePageState extends State<MessagePage> {
                             );
                             _messageController.clear();
 
-                            _historyScrollController.jumpTo(_historyScrollController.position.maxScrollExtent);
+                            _historyScrollController.jumpTo(0.0);
                           }
                         },
                         child: Container(
@@ -252,6 +258,7 @@ class _MessagePageState extends State<MessagePage> {
       )
     );
   }
+
 }
 
 
@@ -284,26 +291,24 @@ class MessagePageBody extends StatelessWidget {
                   );
                 case MessagePageFetched():
                   Map<String, List<Message>> groupedMessages = _groupMessagesByDate(state.listOfMessages);
-                  return Align(
-                    alignment: Alignment.bottomCenter,
-                    child: ListView.builder(
-                      controller: scrollController,
-                      shrinkWrap: true,
-                      itemCount: groupedMessages.length,
-                      itemBuilder: (context, index) {
-                        String date = groupedMessages.keys.elementAt(index);
-                        List<Message> messagesForDate = groupedMessages[date]!;
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            _buildDateHeader(date),
-                            SizedBox(height: 20,),
-                            ...messagesForDate.map((message) => _buildMessageBubble(message, currentUser)),
-                          ],
-                        );
-                      },
-                    ),
+                  groupedMessages =  Map.fromEntries(groupedMessages.entries.toList().reversed);
+                  return ListView.builder(
+                    controller: scrollController,
+                    reverse: true,
+                    itemCount: groupedMessages.length,
+                    itemBuilder: (context, index) {
+                      String date = groupedMessages.keys.elementAt(index);
+                      List<Message> messagesForDate = groupedMessages[date]!;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _buildDateHeader(date),
+                          SizedBox(height: 20,),
+                          ...messagesForDate.map((message) => _buildMessageBubble(message, currentUser)),
+                        ],
+                      );
+                    },
                   );
                 default:
                   return const SizedBox();
@@ -312,6 +317,7 @@ class MessagePageBody extends StatelessWidget {
             }
         )
     );
+
   }
 
   Map<String, List<Message>> _groupMessagesByDate(List<Message> messages) {
@@ -341,6 +347,8 @@ class MessagePageBody extends StatelessWidget {
       ],
     );
   }
+
+
 
   Widget _buildMessageBubble(Message message, User currentUser) {
     bool isCurrentUser = message.senderUUID == currentUser.uuid;
