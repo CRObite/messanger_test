@@ -1,10 +1,13 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:messanger_test/config/app_colors.dart';
 import 'package:messanger_test/config/app_styles.dart';
+import 'package:messanger_test/presentation/home_page_cubit/home_page_cubit.dart';
 
 import '../widgets/common_text_field.dart';
+import '../widgets/user_message_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,12 +17,33 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
+  HomePageCubit homePageCubit = HomePageCubit();
+
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    homePageCubit.loadUserMessages();
+
+    _searchController.addListener(() {
+      homePageCubit.searchUsers(_searchController.text);
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar:  PreferredSize(
-        preferredSize: Size.fromHeight(169),
+        preferredSize: Size.fromHeight(160),
         child: Column(
           children: [
             AppBar(
@@ -28,10 +52,12 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 6,),
             Container(
+              height: 50,
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: CommonTextField(
                 hint: 'Поиск',
                 prefixIcon: 'assets/icons/search.svg',
+                controller: _searchController,
               )
             ),
             SizedBox(height: 24,),
@@ -42,65 +68,66 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: ListView.builder(
-            itemCount: 5,
-            itemBuilder: (context,index){
-              return GestureDetector(
-                onTap: (){
-                  context.pushNamed('message');
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    border:Border(
-                      bottom: BorderSide(width: 1,color: AppColors.borderGrey),
-                    )
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            height: 50,
-                            width: 50,
-                          ),
-
-                          SizedBox(width: 12,),
-
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Виктор Власов',style: AppStyles.messageUserText,),
-                              Text('Я готов',style: AppStyles.messageSubTitleText,),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(width: 12,),
-
-                      SizedBox(
-                        width: 80,
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                              child: Text('Вчера')
-                          )
-                      )
-                    ],
-                  ),
-                ),
-              );
-            }
+      body: BlocProvider(
+        create: (context) => homePageCubit,
+        child: HomePageBody(
+          homePageCubit: homePageCubit
         ),
-      ),
+      )
     );
   }
 }
+
+
+class HomePageBody extends StatelessWidget {
+  const HomePageBody({super.key, required this.homePageCubit});
+
+  final HomePageCubit homePageCubit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: BlocBuilder(
+        bloc: homePageCubit,
+        builder: (context,state){
+          switch (state) {
+            case HomePageLoading():
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            case HomePageError():
+              return Center(
+                child: Text(
+                  state.errorText,
+                  style: AppStyles.titleText,
+                ),
+              );
+            case HomePageFetched():
+              return ListView.builder(
+                itemCount: state.userAndMessages.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () {
+                      context.pushNamed('message',extra: {
+                        'currentUser': state.currentUser,
+                        'targetUser': state.userAndMessages[index].user,
+                      });
+                    },
+                    child: UserMessageCard(
+                      userMessage: state.userAndMessages[index],
+                      sender: state.currentUser.uuid == state.userAndMessages[index].lastMessage?.senderUUID,
+                    ),
+                  );
+                },
+              );
+            default:
+              return const SizedBox();
+          }
+
+        }
+      )
+    );
+  }
+}
+

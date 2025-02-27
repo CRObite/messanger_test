@@ -25,4 +25,19 @@ class AppStyles{
       fontWeight: FontWeight.w500,
       color: AppColors.iconGrey
   );
+
+  static TextStyle messageDateText = TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      color: AppColors.iconGrey
+  );
+
+
+  static TextStyle userNoAvatarTextText = TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+      color: Colors.white
+  );
+
+
 }

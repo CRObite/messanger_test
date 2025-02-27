@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 part 'user.g.dart';
 
@@ -16,5 +17,8 @@ class User extends HiveObject{
   @HiveField(3)
   Uint8List? avatar;
 
-  User(this.uuid, this.name, this.surname, this.avatar);
+  @HiveField(4)
+  Color noAvatarColor;
+
+  User(this.uuid, this.name, this.surname, this.avatar, this.noAvatarColor);
 }

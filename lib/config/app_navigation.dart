@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../domain/user.dart';
 import '../presentation/home_page.dart';
 import '../presentation/message_page.dart';
 
@@ -45,9 +46,30 @@ class AppNavigation{
                     path: '/message',
                     name: 'message',
                     builder: (context,state){
-                      return MessagePage(
-                        key: state.pageKey,
-                      );
+
+                      User? currentUser;
+                      User? targetUser;
+
+                      if (state.extra != null) {
+                        final extras = state.extra as Map<String, dynamic>;
+                        if (extras.containsKey('currentUser')) {
+                          currentUser = extras['currentUser'] as User;
+                        }
+                        if (extras.containsKey('targetUser')) {
+                          targetUser = extras['targetUser'] as User;
+                        }
+                      }
+
+                      if(currentUser!= null && targetUser!= null){
+                        return MessagePage(
+                          key: state.pageKey,
+                          currentUser: currentUser,
+                          targetUser: targetUser,
+                        );
+                      }else{
+                        return SizedBox();
+                      }
+
                     },
                   )
                 ],

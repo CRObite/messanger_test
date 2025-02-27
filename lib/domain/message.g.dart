@@ -20,25 +20,31 @@ class MessageAdapter extends TypeAdapter<Message> {
       fields[0] as String,
       fields[1] as String,
       fields[2] as String,
-      fields[3] as Uint8List?,
-      fields[4] as DateTime,
+      fields[3] as String,
+      fields[4] as Uint8List?,
+      fields[5] as DateTime,
+      fields[6] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, Message obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(7)
       ..writeByte(0)
-      ..write(obj.senderUUID)
+      ..write(obj.messageUUID)
       ..writeByte(1)
-      ..write(obj.receiverUUID)
+      ..write(obj.senderUUID)
       ..writeByte(2)
-      ..write(obj.text)
+      ..write(obj.receiverUUID)
       ..writeByte(3)
-      ..write(obj.image)
+      ..write(obj.text)
       ..writeByte(4)
-      ..write(obj.timestamp);
+      ..write(obj.image)
+      ..writeByte(5)
+      ..write(obj.timestamp)
+      ..writeByte(6)
+      ..write(obj.read);
   }
 
   @override

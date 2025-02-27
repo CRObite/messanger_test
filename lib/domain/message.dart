@@ -5,21 +5,27 @@ part 'message.g.dart';
 @HiveType(typeId: 0)
 class Message extends HiveObject{
   @HiveField(0)
-  String senderUUID;
+  String messageUUID;
 
   @HiveField(1)
-  String receiverUUID;
+  String senderUUID;
 
   @HiveField(2)
-  String text;
+  String receiverUUID;
 
   @HiveField(3)
-  Uint8List? image;
+  String text;
 
   @HiveField(4)
+  Uint8List? image;
+
+  @HiveField(5)
   DateTime timestamp;
 
-  Message(this.senderUUID, this.receiverUUID, this.text, this.image,
-      this.timestamp);
+  @HiveField(6)
+  bool read;
+  // i can use enum for 3 types of status. but in design only 2 types of check mark so i select boolean in this case
 
+  Message(this.messageUUID, this.senderUUID, this.receiverUUID, this.text,
+      this.image, this.timestamp, this.read);
 }
