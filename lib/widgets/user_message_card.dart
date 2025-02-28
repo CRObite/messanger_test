@@ -5,7 +5,7 @@ import 'package:messanger_test/domain/user_message.dart';
 
 import '../config/app_colors.dart';
 import '../config/app_styles.dart';
-import '../config/timeago_formatter.dart';
+import '../util/timeago_formatter.dart';
 
 class UserMessageCard extends StatelessWidget {
   const UserMessageCard({super.key, required this.userMessage, required this.sender});

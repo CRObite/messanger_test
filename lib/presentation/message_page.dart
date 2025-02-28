@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:messanger_test/config/message_box_painter.dart';
 import 'package:messanger_test/presentation/message_page_cubit/message_page_cubit.dart';
 import 'package:messanger_test/widgets/common_text_field.dart';
+import 'package:messanger_test/widgets/file_image_panel.dart';
 import 'package:messanger_test/widgets/svg_icon.dart';
 
 
@@ -12,6 +12,8 @@ import '../config/app_colors.dart';
 import '../config/app_styles.dart';
 import '../domain/message.dart';
 import '../domain/user.dart';
+import '../widgets/message_box.dart';
+import '../widgets/message_header.dart';
 
 class MessagePage extends StatefulWidget {
   const MessagePage({super.key, required this.currentUser, required this.targetUser});
@@ -255,54 +257,12 @@ class _MessagePageState extends State<MessagePage> {
 
 
                   if(messagePageCubit.fileImagePanelOpened)
-                  ...[
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: (){
-                            messagePageCubit.setSelectedImage(
-                                widget.currentUser.uuid,
-                                widget.targetUser.uuid
-                            );
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.fieldGrey,
-                            ),
-                            padding: EdgeInsets.all(8),
-                            child: Center(
-                              child: SvgIcon(assetName: 'assets/icons/image.svg'),
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(width: 8,),
-
-                        GestureDetector(
-                          onTap: (){
-                            messagePageCubit.setFile(
-                                widget.currentUser.uuid,
-                                widget.targetUser.uuid
-                            );
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.fieldGrey,
-                            ),
-                            padding: EdgeInsets.all(8),
-                            child: Center(
-                              child: SvgIcon(assetName: 'assets/icons/file.svg'),
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                    Divider(
-                        color: AppColors.fieldGrey
-                    )
-                  ],
+                   fileImagePanel(
+                       context,
+                       messagePageCubit,
+                       widget.currentUser.uuid,
+                       widget.targetUser.uuid
+                   ),
 
 
 
@@ -432,9 +392,9 @@ class MessagePageBody extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          _buildDateHeader(date),
+                          dateHeader(date),
                           SizedBox(height: 20,),
-                          ...messagesForDate.map((message) => _buildMessageBubble(message, currentUser)),
+                          ...messagesForDate.map((message) => messageBox(message, currentUser,messagePageCubit)),
                         ],
                       );
                     },
@@ -464,135 +424,6 @@ class MessagePageBody extends StatelessWidget {
     return groupedMessages;
   }
 
-  Widget _buildDateHeader(String date) {
-    final String today = DateFormat('dd.MM.yyyy').format(DateTime.now());
-    return Row(
-      children: [
-        Expanded(child: Divider(color: AppColors.iconGrey,)),
-        SizedBox(width: 10,),
-        Text(date == today ? "Сегодня" : date,style: AppStyles.messageDateText,),
-        SizedBox(width: 10,),
-        Expanded(child: Divider(color: AppColors.iconGrey,)),
-      ],
-    );
-  }
-
-
-
-  Widget _buildMessageBubble(Message message, User currentUser) {
-    bool isCurrentUser = message.senderUUID == currentUser.uuid;
-
-    return Align(
-      alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Padding(
-        padding: EdgeInsets.only(bottom: 6,left: isCurrentUser? 57:0,right: isCurrentUser? 0:57,),
-        child: CustomPaint(
-          painter: MessageBoxPainter(isCurrentUser: isCurrentUser),
-          child: Container(
-            margin: EdgeInsets.all(4),
-            padding: EdgeInsets.only(top: 4,left: isCurrentUser?4:14,right: isCurrentUser? 14:4,bottom: 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-
-                if(message.image != null)
-                ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(19),
-                      topRight: Radius.circular(19),
-                      bottomLeft: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                    ),
-                    child: Image.memory(message.image!)
-                  ),
-                  SizedBox(height: 8,)
-                ],
-
-                if(message.file != null)
-                  ...[
-                    GestureDetector(
-                      onTap: (){
-                        messagePageCubit.saveFile(
-                          message.file!.fileData!,
-                          message.file!.fileName,
-                        );
-                      },
-                      child: Row(
-                        children: [
-
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.fieldGrey,
-                              shape: BoxShape.circle
-                            ),
-                            padding: EdgeInsets.all(8),
-                            child: Icon(
-                              Icons.download_rounded,
-                              size: 24,
-                              color: isCurrentUser
-                                ? AppColors.myMessageTextGrey
-                                : AppColors.otherMessageTextGrey
-                            ),
-                          ),
-
-                          SizedBox(width: 12,),
-
-                          Flexible(
-                            child: Text(
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              message.file?.fileName ?? '',
-                              style: isCurrentUser
-                                ?AppStyles.messageDateText.copyWith(color:AppColors.myMessageTextGrey)
-                                :AppStyles.messageDateText.copyWith(color:AppColors.otherMessageTextGrey),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 8,)
-                  ],
-
-
-                Row(
-                  mainAxisSize: message.image == null && message.file == null
-                      ? MainAxisSize.min
-                      : MainAxisSize.max,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 10),
-                        child: Text(message.text, style: isCurrentUser
-                          ?AppStyles.messageDateText.copyWith(color:AppColors.myMessageTextGrey)
-                          :AppStyles.messageDateText.copyWith(color:AppColors.otherMessageTextGrey),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12,),
-                    Row(
-                      children: [
-                        Text(DateFormat('HH:mm').format(message.timestamp),
-                          style: AppStyles.messageSubTitleText.copyWith(color: AppColors.myMessageTextGrey),),
-                        SizedBox(width: 12,),
-                        isCurrentUser
-                            ? message.read
-                            ? SvgIcon(assetName: 'assets/icons/double_check.svg',height: 12,color: AppColors.myMessageTextGrey,)
-                            : SvgIcon(assetName: 'assets/icons/check.svg',height: 12,color: AppColors.myMessageTextGrey)
-                            : SizedBox()
-                      ],
-                    )
-                  ],
-                ),
-              ],
-            )
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 

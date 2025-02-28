@@ -3,7 +3,7 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:messanger_test/domain/media_file.dart';
 
 import 'config/app_navigation.dart';
-import 'config/initial_data.dart';
+import 'util/initial_data.dart';
 import 'domain/message.dart';
 import 'domain/user.dart';
 
