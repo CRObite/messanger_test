@@ -15,7 +15,7 @@ simple messanger app with hive
 ### 🛆 Установка
 1. Клонируйте репозиторий:
    ```sh
-   git clone https://github.com/crobite/messanger_test.git
+   git clone https://github.com/CRObite/messanger_test.git
    ```
 2. Перейдите в директорию проекта:
    ```sh
